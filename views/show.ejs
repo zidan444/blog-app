@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title><%= blog.title %></title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<%- include('partials/header') %>
+
+<div class="container mt-5">
+  <h1 class="mb-3"><%= blog.title %></h1>
+  <small class="text-white">Published: <%= blog.createdAt.toDateString() %></small>
+
+  <% if(blog.categories.length){ %>
+    <p class="text-info mt-2">Categories: <%= blog.categories.join(", ") %></p>
+  <% } %>
+
+  <% if(blog.image){ %>
+    <img src="<%= blog.image %>" class="img-fluid rounded my-3" alt="Blog cover">
+  <% } %>
+
+  <p class="fs-5"><%= blog.content %></p>
+
+  <div class="mt-4">
+    <a href="/" class="btn btn-outline-light">← Back to Blogs</a>
+    <% if(session.userId){ %>
+      <a href="/<%= blog._id %>/edit" class="btn btn-warning">Edit</a>
+      <form action="/<%= blog._id %>?_method=DELETE" method="POST" class="d-inline">
+        <button type="submit" class="btn btn-danger">Delete</button>
+      </form>
+    <% } %>
+  </div>
+</div>
+
+<%- include('partials/footer') %>
+</body>
+</html>

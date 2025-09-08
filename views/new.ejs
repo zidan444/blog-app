@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Create New Blog</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <%- include('partials/header') %>
+
+<div class="container mt-5">
+  <h1 class="mb-4 text-center">Create a New Blog Post</h1>
+
+  <form action="/" method="POST" enctype="multipart/form-data" class="p-4 rounded shadow" style="background:#1e1e1e;">
+    <!-- Title -->
+    <div class="mb-3">
+      <label for="title" class="form-label">Title</label>
+      <input type="text" name="title" id="title" class="form-control" placeholder="Enter blog title" required>
+    </div>
+
+    <!-- Content -->
+    <div class="mb-3">
+      <label for="content" class="form-label">Content</label>
+      <textarea name="content" id="content" rows="8" class="form-control" placeholder="Write your blog here..." required></textarea>
+    </div>
+
+    <!-- Categories -->
+    <div class="mb-3">
+      <label for="categories" class="form-label">Categories</label>
+      <input type="text" name="categories" id="categories" class="form-control" placeholder="Comma separated, e.g. Tech,Lifestyle">
+    </div>
+
+    <!-- Image Upload -->
+    <div class="mb-3">
+      <label for="image" class="form-label">Upload Image</label>
+      <input type="file" name="image" id="image" class="form-control" accept="image/*">
+    </div>
+
+    <button type="submit" class="btn btn-success w-100">Publish</button>
+  </form>
+</div>
+
+<%- include('partials/footer') %>
+</body>
+</html>

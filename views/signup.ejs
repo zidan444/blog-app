@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Sign Up</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <%- include('partials/header') %>
+
+  <div class="container mt-5">
+    <h1 class="mb-4 text-center">Create Account</h1>
+
+    <!-- Error message -->
+    <% if (error) { %>
+      <div class="alert alert-danger text-center" style="max-width:400px; margin:auto;">
+        <%= error %>
+      </div>
+    <% } %>
+
+    <form action="/signup" method="POST" class="p-4 rounded shadow" style="background:#1e1e1e; max-width:400px; margin:auto;">
+      <div class="mb-3">
+        <label for="username" class="form-label">Username</label>
+        <input type="text" name="username" id="username" required class="form-control" placeholder="Choose a username">
+      </div>
+
+      <div class="mb-3">
+        <label for="email" class="form-label">Email</label>
+        <input type="email" name="email" id="email" required class="form-control" placeholder="Enter your email">
+      </div>
+
+      <div class="mb-3">
+        <label for="password" class="form-label">Password</label>
+        <input type="password" name="password" id="password" required class="form-control" placeholder="Create a password">
+      </div>
+
+      <button type="submit" class="btn btn-success w-100">Sign Up</button>
+    </form>
+
+    <p class="mt-3 text-center">
+      Already have an account? <a href="/login">Login</a>
+    </p>
+  </div>
+
+  <%- include('partials/footer') %>
+</body>
+</html>
