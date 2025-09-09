@@ -40,7 +40,7 @@ router.post("/", isLoggedIn, upload.single("image"), async (req, res) => {
       content,
       categories: categories ? categories.split(",").map(c => c.trim()) : [],
       image: req.file ? "/uploads/" + req.file.filename : null,
-      author: req.session.username
+      author: req.session.userId
     });
 
     await blog.save();
@@ -50,6 +50,7 @@ router.post("/", isLoggedIn, upload.single("image"), async (req, res) => {
     res.send("Error creating blog.");
   }
 });
+
 
 // ===== Show Blog by ID =====
 router.get("/:id", async (req, res) => {
