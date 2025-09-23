@@ -1,11 +1,11 @@
 const express = require("express");
 const router = express.Router();
 const User = require("../models/user");
-
+const { generateToken } = require("../middleware/auth");
 
 // ===== Signup (GET) =====
 router.get("/signup", (req, res) => {
-  if (req.session.userId) return res.redirect("/");
+  if (req.cookies.token) return res.redirect("/");
   res.render("signup", { error: null });
 });
 
@@ -16,28 +16,35 @@ router.post("/signup", async (req, res) => {
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res.render("signup", { error: "Email already in use. Try another." });
+      return res.render("signup", { error: "Email already in use." });
     }
 
     const user = new User({ username, email, password });
     await user.save();
 
-    req.session.userId = user._id;
-    req.session.username = user.username;
+    const token = generateToken(user);
+    console.log(token);
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 24 * 60 * 60 * 1000,
+    });
+  
+
+
 
     res.redirect("/");
   } catch (err) {
-    console.error("Signup error:", "min 6 char");
-    res.render("signup", { error: "min 6 char"});
+    console.error("Signup error:", err.message);
+    res.render("signup", { error: "Error signing up. Try again." });
   }
 });
 
-
-
 // ===== Login (GET) =====
 router.get("/login", (req, res) => {
-  if (req.session.userId) return res.redirect("/");
-  res.render("login");
+  if (req.cookies.token) return res.redirect("/");
+  res.render("login", { error: null });
 });
 
 // ===== Login (POST) =====
@@ -46,27 +53,32 @@ router.post("/login", async (req, res) => {
     const { email, password } = req.body;
 
     const user = await User.findOne({ email });
-    if (!user) return res.send("No account with that email.");
+    if (!user) return res.render("login", { error: "No account with that email." });
 
     const isMatch = await user.comparePassword(password);
-    if (!isMatch) return res.send("Incorrect password.");
+    if (!isMatch) return res.render("login", { error: "Incorrect password." });
 
-    // store session
-    req.session.userId = user._id;
-    req.session.username = user.username;
+    const token = generateToken(user);
+    console.log(token);
+    
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 24 * 60 * 60 * 1000,
+    });
 
     res.redirect("/");
   } catch (err) {
     console.error(err);
-    res.send("Error logging in. Try again.");
+    res.render("login", { error: "Error logging in." });
   }
 });
 
 // ===== Logout =====
 router.post("/logout", (req, res) => {
-  req.session.destroy(() => {
-    res.redirect("/login");
-  });
+  res.clearCookie("token");
+  res.redirect("/login");
 });
 
 module.exports = router;

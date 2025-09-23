@@ -3,33 +3,31 @@ const router = express.Router();
 const multer = require("multer");
 const path = require("path");
 const Blog = require("../models/blog");
+const { isLoggedIn, attachUserIfAny } = require("../middleware/auth");
 
-// ===== Multer File Upload Config =====
+// ===== Multer Config =====
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, "public/uploads"),
   filename: (req, file, cb) => {
     cb(null, Date.now() + path.extname(file.originalname));
-  }
+  },
 });
 const upload = multer({ storage });
 
-// ===== Middleware to check login =====
-function isLoggedIn(req, res, next) {
-  if (req.session && req.session.userId) return next();
-  res.redirect("/login");
-}
-
 // ===== Show all blogs =====
-router.get("/", async (req, res) => {
+router.get("/", attachUserIfAny, async (req, res) => {
   try {
-    const blogs = await Blog.find().populate("author", "username").sort({ createdAt: -1 });
-    res.render("index", { blogs, userId: req.session.userId });
-  } catch (err) {
+    const blogs = await Blog.find()
+      .populate("author", "username")
+      .sort({ createdAt: -1 });
+
+    res.render("index", { blogs, userId: req.user?.id || null });
+  } catch {
     res.status(500).send("Error fetching blogs");
   }
 });
 
-// ===== Show new blog form =====
+// ===== New blog form =====
 router.get("/new", isLoggedIn, (req, res) => {
   res.render("new");
 });
@@ -42,17 +40,17 @@ router.post("/", isLoggedIn, upload.single("image"), async (req, res) => {
       content: req.body.content,
       categories: req.body.categories ? req.body.categories.split(",") : [],
       image: req.file ? "/uploads/" + req.file.filename : null,
-      author: req.session.userId
+      author: req.user.id,
     });
     await blog.save();
     res.redirect("/");
-  } catch (err) {
+  } catch {
     res.status(500).send("Error creating blog");
   }
 });
 
-// Show single blog
-router.get("/:id", async (req, res) => {
+// ===== Single blog =====
+router.get("/:id", attachUserIfAny, async (req, res) => {
   try {
     const blog = await Blog.findById(req.params.id)
       .populate("author", "username")
@@ -60,30 +58,24 @@ router.get("/:id", async (req, res) => {
 
     if (!blog) return res.status(404).send("Blog not found");
 
-    // Build share URL here
     const shareUrl = `${req.protocol}://${req.get("host")}/${blog._id}`;
-
-    res.render("show", {
-      blog,
-      userId: req.session.userId,
-      shareUrl // ✅ pass it to EJS
-    });
+    res.render("show", { blog, userId: req.user?.id || null, shareUrl });
   } catch (err) {
     console.error(err);
     res.status(500).send("Server error");
   }
 });
 
-// ===== Edit blog form =====
+// ===== Edit blog =====
 router.get("/:id/edit", isLoggedIn, async (req, res) => {
   try {
     const blog = await Blog.findById(req.params.id);
     if (!blog) return res.status(404).send("Blog not found");
-    if (blog.author.toString() !== req.session.userId.toString()) {
+    if (blog.author.toString() !== req.user.id) {
       return res.status(403).send("Not authorized");
     }
     res.render("edit", { blog });
-  } catch (err) {
+  } catch {
     res.status(500).send("Error loading edit page");
   }
 });
@@ -93,7 +85,7 @@ router.put("/:id", isLoggedIn, upload.single("image"), async (req, res) => {
   try {
     let blog = await Blog.findById(req.params.id);
     if (!blog) return res.status(404).send("Blog not found");
-    if (blog.author.toString() !== req.session.userId.toString()) {
+    if (blog.author.toString() !== req.user.id) {
       return res.status(403).send("Not authorized");
     }
 
@@ -104,7 +96,7 @@ router.put("/:id", isLoggedIn, upload.single("image"), async (req, res) => {
 
     await blog.save();
     res.redirect("/" + req.params.id);
-  } catch (err) {
+  } catch {
     res.status(500).send("Error updating blog");
   }
 });
@@ -114,12 +106,12 @@ router.delete("/:id", isLoggedIn, async (req, res) => {
   try {
     const blog = await Blog.findById(req.params.id);
     if (!blog) return res.status(404).send("Blog not found");
-    if (blog.author.toString() !== req.session.userId.toString()) {
+    if (blog.author.toString() !== req.user.id) {
       return res.status(403).send("Not authorized");
     }
     await Blog.findByIdAndDelete(req.params.id);
     res.redirect("/");
-  } catch (err) {
+  } catch {
     res.status(500).send("Error deleting blog");
   }
 });
@@ -130,23 +122,20 @@ router.post("/:id/like", isLoggedIn, async (req, res) => {
     const blog = await Blog.findById(req.params.id);
     if (!blog) return res.status(404).send("Blog not found");
 
-    const userId = req.session.userId;
+    const userId = req.user.id;
     const alreadyLiked = blog.likes.includes(userId);
 
-    if (alreadyLiked) {
-      blog.likes.pull(userId); // unlike
-    } else {
-      blog.likes.push(userId); // like
-    }
+    if (alreadyLiked) blog.likes.pull(userId);
+    else blog.likes.push(userId);
 
     await blog.save();
     res.redirect("/" + req.params.id);
-  } catch (err) {
+  } catch {
     res.status(500).send("Error liking blog");
   }
 });
 
-// ===== Comment on blog =====
+// ===== Comment =====
 router.post("/:id/comment", isLoggedIn, async (req, res) => {
   try {
     const blog = await Blog.findById(req.params.id);
@@ -154,12 +143,12 @@ router.post("/:id/comment", isLoggedIn, async (req, res) => {
 
     blog.comments.push({
       text: req.body.text,
-      user: req.session.userId
+      user: req.user.id,
     });
 
     await blog.save();
     res.redirect("/" + req.params.id);
-  } catch (err) {
+  } catch {
     res.status(500).send("Error adding comment");
   }
 });
