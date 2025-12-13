@@ -3,6 +3,7 @@ const router = express.Router();
 const multer = require("multer");
 const path = require("path");
 const Blog = require("../models/blog");
+const mongoose = require("mongoose");
 const { isLoggedIn, attachUserIfAny } = require("../middleware/auth");
 
 // ===== Multer Config =====
@@ -39,7 +40,7 @@ router.post("/", isLoggedIn, upload.single("image"), async (req, res) => {
       title: req.body.title,
       content: req.body.content,
       categories: req.body.categories ? req.body.categories.split(",") : [],
-      image: req.file ? "/uploads/" + req.file.filename : null,
+      image: req.file ? "/uploads/" + req.file.filename : (req.body.image || null),
       author: req.user.id,
     });
     await blog.save();
@@ -52,6 +53,9 @@ router.post("/", isLoggedIn, upload.single("image"), async (req, res) => {
 // ===== Single blog =====
 router.get("/:id", attachUserIfAny, async (req, res) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(404).send("Blog not found");
+    }
     const blog = await Blog.findById(req.params.id)
       .populate("author", "username")
       .populate("comments.user", "username");
@@ -93,6 +97,7 @@ router.put("/:id", isLoggedIn, upload.single("image"), async (req, res) => {
     blog.content = req.body.content;
     blog.categories = req.body.categories ? req.body.categories.split(",") : [];
     if (req.file) blog.image = "/uploads/" + req.file.filename;
+    else if (req.body.image) blog.image = req.body.image;
 
     await blog.save();
     res.redirect("/" + req.params.id);
@@ -122,8 +127,8 @@ router.post("/:id/like", isLoggedIn, async (req, res) => {
     const blog = await Blog.findById(req.params.id);
     if (!blog) return res.status(404).send("Blog not found");
 
-    const userId = req.user.id;
-    const alreadyLiked = blog.likes.includes(userId);
+  const userId = req.user.id;
+  const alreadyLiked = blog.likes && blog.likes.some((id) => id.toString() === userId);
 
     if (alreadyLiked) blog.likes.pull(userId);
     else blog.likes.push(userId);

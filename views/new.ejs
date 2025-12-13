@@ -10,7 +10,7 @@
 <div class="container mt-5">
   <h1 class="mb-4 text-center">Create a New Blog Post</h1>
 
-  <form action="/" method="POST" enctype="multipart/form-data" class="p-4 rounded shadow" style="background:#1e1e1e;">
+  <form id="blogForm" class="p-4 rounded shadow" style="background:#1e1e1e;">
     <!-- Title -->
     <div class="mb-3">
       <label for="title" class="form-label">Title</label>
@@ -32,13 +32,71 @@
     <!-- Image Upload -->
     <div class="mb-3">
       <label for="image" class="form-label">Upload Image</label>
-      <input type="file" name="image" id="image" class="form-control" accept="image/*">
+      <input type="file" id="image" class="form-control" accept="image/*">
     </div>
+
+    <!-- Hidden input to store image URL (Cloudinary or local) -->
+    <input type="hidden" name="image" id="imageUrl">
+
+    <div id="preview" class="mb-3"></div>
 
     <button type="submit" class="btn btn-success w-100">Publish</button>
   </form>
 </div>
 
 <%- include('partials/footer') %>
+
+<script>
+const blogForm = document.getElementById('blogForm');
+const imageInput = document.getElementById('image');
+const previewDiv = document.getElementById('preview');
+const imageUrlInput = document.getElementById('imageUrl');
+
+blogForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+
+  if (imageInput.files.length) {
+    const formData = new FormData();
+    formData.append('image', imageInput.files[0]);
+
+    // Upload image to Cloudinary
+    const res = await fetch('/api/upload', { method: 'POST', body: formData });
+    const data = await res.json();
+
+    if (res.ok) {
+      // Set the Cloudinary URL in the hidden input
+      imageUrlInput.value = data.url;
+
+      // Optional: show preview
+      previewDiv.innerHTML = `<img src="${data.url}" style="height:200px; object-fit:cover;">`;
+    } else {
+      console.error(data);
+      return alert('Image upload failed');
+    }
+  }
+
+  // Now submit the blog data to your backend
+  const payload = {
+    title: document.getElementById('title').value,
+    content: document.getElementById('content').value,
+    categories: document.getElementById('categories').value,
+    image: imageUrlInput.value
+  };
+
+const postRes = await fetch('/', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify(payload)
+});
+
+
+  if (postRes.ok) {
+    alert('Blog published successfully!');
+    window.location.href = '/'; // redirect to blog list
+  } else {
+    alert('Blog creation failed');
+  }
+});
+</script>
 </body>
 </html>

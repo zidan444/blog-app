@@ -23,13 +23,13 @@ router.post("/signup", async (req, res) => {
     await user.save();
 
     const token = generateToken(user);
-    console.log(token);
-    res.cookie("token", token, {
+    const cookieOptions = {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
       maxAge: 24 * 60 * 60 * 1000,
-    });
+    };
+    res.cookie("token", token, cookieOptions);
   
 
 
@@ -59,14 +59,13 @@ router.post("/login", async (req, res) => {
     if (!isMatch) return res.render("login", { error: "Incorrect password." });
 
     const token = generateToken(user);
-    console.log(token);
-    
-    res.cookie("token", token, {
+    const cookieOptions = {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
       maxAge: 24 * 60 * 60 * 1000,
-    });
+    };
+    res.cookie("token", token, cookieOptions);
 
     res.redirect("/");
   } catch (err) {
