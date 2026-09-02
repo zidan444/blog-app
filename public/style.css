@@ -1,88 +1,541 @@
-/* General styles */
+/* ==========================================================================
+   Apple-Inspired Minimal Design System (macOS & iOS Dark Mode Aesthetic)
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+:root {
+  --bg-dark: #000000;
+  --bg-card: rgba(24, 24, 27, 0.65);
+  --bg-card-hover: rgba(39, 39, 42, 0.75);
+  --bg-input: rgba(24, 24, 27, 0.9);
+  
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-hover: rgba(255, 255, 255, 0.2);
+  --border-focus: #3b82f6;
+  
+  --text-primary: #f5f5f7;
+  --text-secondary: #a1a1aa;
+  --text-muted: #71717a;
+
+  --apple-blue: #2997ff;
+  --apple-blue-hover: #0077ed;
+  
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 22px;
+  --radius-pill: 9999px;
+  
+  --shadow-apple: 0 12px 32px rgba(0, 0, 0, 0.5);
+  --shadow-sm: 0 4px 14px rgba(0, 0, 0, 0.3);
+  
+  --ease-apple: cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-fast: all 0.2s var(--ease-apple);
+  --transition-smooth: all 0.35s var(--ease-apple);
+}
+
+/* Custom Smooth Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-dark);
+}
+::-webkit-scrollbar-thumb {
+  background: #27272a;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #3f3f46;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
 body {
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-  background-color: #121212;
-  color: #eaeaea;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+  background-color: var(--bg-dark);
+  color: var(--text-primary);
   margin: 0;
   padding: 0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  letter-spacing: -0.011em;
+}
+
+main {
+  flex: 1;
 }
 
 a {
+  color: var(--text-primary);
   text-decoration: none;
+  transition: var(--transition-fast);
 }
 
-/* Navbar */
-.navbar {
-  margin-bottom: 20px;
+a:hover {
+  color: #ffffff;
 }
 
-/* Containers */
 .container {
-  max-width: 900px;
+  max-width: 1040px;
 }
 
-/* Blog cards */
-.card {
-  background-color: #1e1e1e;
-  border: 1px solid #333;
-  transition: transform 0.2s ease;
+/* ==========================================================================
+   Apple-Style Glass Navigation Bar
+   ========================================================================== */
+.navbar-custom {
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border-subtle);
+  padding: 0.9rem 0;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  transition: var(--transition-fast);
 }
 
-.card:hover {
-  transform: scale(1.02);
+.brand-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
-.card-title {
-  color: #f8f9fa;
+.brand-title:hover {
+  opacity: 0.85;
 }
 
-.card-text {
-  color: #cfcfcf;
+.nav-link {
+  color: var(--text-secondary) !important;
+  font-weight: 500;
+  font-size: 0.9rem;
+  padding: 0.45rem 1rem !important;
+  border-radius: var(--radius-pill);
+  transition: var(--transition-fast);
 }
 
-/* Buttons */
-.btn-success {
-  background-color: #28a745;
-  border: none;
+.nav-link:hover {
+  color: var(--text-primary) !important;
+  background: rgba(255, 255, 255, 0.08);
 }
 
-.btn-success:hover {
-  background-color: #218838;
+/* Active Press Effect */
+.btn:active, .nav-link:active, .card:active {
+  transform: scale(0.97);
 }
 
-.btn-danger {
-  background-color: #dc3545;
-  border: none;
+/* ==========================================================================
+   Apple Minimal Hero & Search Section
+   ========================================================================== */
+.hero-wrapper {
+  padding: 4rem 0 3rem;
+  text-align: center;
 }
 
-.btn-danger:hover {
-  background-color: #c82333;
+.hero-badge-apple {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 1rem;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  font-size: 0.825rem;
+  font-weight: 600;
+  margin-bottom: 1.25rem;
 }
 
-.btn-warning {
-  background-color: #ffc107;
-  border: none;
-  color: #000;
+.hero-title {
+  font-size: 3.2rem;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1.12;
+  color: var(--text-primary);
+  margin-bottom: 0.85rem;
 }
 
-.btn-warning:hover {
-  background-color: #e0a800;
+@media (max-width: 768px) {
+  .hero-title { font-size: 2.1rem; }
 }
 
-/* Forms */
-input, textarea {
-  background-color: #1e1e1e;
-  color: #fff;
-  border: 1px solid #444;
+.hero-subtitle {
+  color: var(--text-secondary);
+  font-size: 1.1rem;
+  max-width: 580px;
+  margin: 0 auto 2.2rem;
+  line-height: 1.55;
+  font-weight: 400;
 }
 
-input:focus, textarea:focus {
+/* Apple Search Input */
+.search-container {
+  max-width: 540px;
+  margin: 0 auto;
+  position: relative;
+}
+
+.search-input {
+  background: rgba(24, 24, 27, 0.75) !important;
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--border-subtle) !important;
+  color: var(--text-primary) !important;
+  border-radius: var(--radius-pill) !important;
+  padding: 0.85rem 1.4rem 0.85rem 3.2rem !important;
+  font-size: 0.975rem;
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition-smooth) !important;
+}
+
+.search-input::placeholder {
+  color: var(--text-muted);
+}
+
+.search-input:focus {
+  border-color: var(--border-hover) !important;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.12) !important;
   outline: none;
-  border-color: #28a745;
-  box-shadow: 0 0 5px #28a745;
+}
+
+.search-icon {
+  position: absolute;
+  left: 1.2rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  font-size: 1.05rem;
+  pointer-events: none;
+}
+
+/* Filter Tag Pills */
+.filter-pills-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+  margin-top: 1.6rem;
+}
+
+.filter-pill {
+  padding: 0.4rem 1.1rem;
+  border-radius: var(--radius-pill);
+  font-size: 0.85rem;
+  font-weight: 500;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-subtle);
+  transition: var(--transition-smooth);
+}
+
+.filter-pill:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.1);
+  border-color: var(--border-hover);
+}
+
+.filter-pill.active {
+  background: #ffffff;
+  color: #000000 !important;
+  border-color: #ffffff;
+  font-weight: 600;
+}
+
+/* ==========================================================================
+   Apple-Style Story Cards Grid
+   ========================================================================== */
+.story-card {
+  background: var(--bg-card);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  transition: var(--transition-smooth);
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+}
+
+.story-card:hover {
+  border-color: var(--border-hover);
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-apple);
+}
+
+.story-card-click-area {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  text-decoration: none !important;
+  color: inherit !important;
+}
+
+.story-card-img-wrapper {
+  position: relative;
+  height: 210px;
+  overflow: hidden;
+  background: #18181b;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+
+.story-card-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s var(--ease-apple);
+}
+
+.story-card:hover .story-card-img {
+  transform: scale(1.05);
+}
+
+.story-category-tag {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(8px);
+  color: var(--text-primary);
+  border: 1px solid var(--border-subtle);
+  padding: 0.3rem 0.85rem;
+  border-radius: var(--radius-pill);
+  font-size: 0.725rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.story-card-body {
+  padding: 1.6rem;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.story-card-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.35;
+  letter-spacing: -0.02em;
+  margin-bottom: 0.65rem;
+  color: var(--text-primary);
+  transition: color 0.2s ease;
+}
+
+.story-card:hover .story-card-title {
+  color: var(--text-secondary);
+}
+
+.story-card-excerpt {
+  color: var(--text-secondary);
+  font-size: 0.925rem;
+  line-height: 1.58;
+  margin-bottom: 1.4rem;
+  flex: 1;
+}
+
+/* User Avatar & Author Info */
+.author-pill-group {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-subtle);
+  margin-top: auto;
+}
+
+.avatar-badge {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid var(--border-subtle);
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  text-transform: uppercase;
+}
+
+.author-info {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.8rem;
+}
+
+.author-name-text {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.author-date-text {
+  color: var(--text-muted);
+}
+
+.post-stats-group {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+/* ==========================================================================
+   Apple Minimal Buttons
+   ========================================================================== */
+.btn-minimal {
+  background: #ffffff;
+  color: #000000 !important;
+  font-weight: 600;
+  border: none;
+  border-radius: var(--radius-pill);
+  padding: 0.6rem 1.4rem;
+  font-size: 0.9rem;
+  transition: var(--transition-fast);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-minimal:hover {
+  background: #e5e5ea;
+  color: #000000 !important;
+}
+
+.btn-outline-custom {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-primary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-pill);
+  padding: 0.55rem 1.25rem;
+  font-weight: 500;
+  font-size: 0.9rem;
+  transition: var(--transition-fast);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-outline-custom:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: var(--border-hover);
+  color: #ffffff;
+}
+
+/* ==========================================================================
+   Glass Cards & Auth Page Controls
+   ========================================================================== */
+.glass-card {
+  background: var(--bg-card);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 2.4rem;
+  box-shadow: var(--shadow-apple);
+}
+
+.form-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: 0.45rem;
+}
+
+.form-control, .form-select {
+  background: var(--bg-input) !important;
+  border: 1px solid var(--border-subtle) !important;
+  color: var(--text-primary) !important;
+  border-radius: var(--radius-md) !important;
+  padding: 0.75rem 1rem !important;
+  font-size: 0.95rem !important;
+  transition: var(--transition-fast) !important;
+}
+
+.form-control::placeholder {
+  color: var(--text-muted) !important;
+}
+
+.form-control:focus {
+  border-color: var(--border-focus) !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25) !important;
+  outline: none !important;
+}
+
+/* ==========================================================================
+   Single Story Detail Page
+   ========================================================================== */
+.single-article-title {
+  font-size: 2.8rem;
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 1.2;
+  color: var(--text-primary);
+  margin-bottom: 1.5rem;
+}
+
+@media (max-width: 768px) {
+  .single-article-title { font-size: 2rem; }
+}
+
+.single-article-body {
+  font-size: 1.15rem;
+  line-height: 1.82;
+  color: #e4e4e7;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  background: var(--bg-card);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 2.8rem;
+  margin-bottom: 2.8rem;
+  box-shadow: var(--shadow-sm);
+}
+
+@media (max-width: 768px) {
+  .single-article-body { padding: 1.5rem; font-size: 1.05rem; }
+}
+
+/* Comments */
+.comments-box {
+  background: var(--bg-card);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 2.2rem;
+}
+
+.comment-card-item {
+  background: rgba(24, 24, 27, 0.8);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 1.2rem;
 }
 
 /* Footer */
 footer {
-  border-top: 1px solid #333;
+  background: var(--bg-dark);
+  border-top: 1px solid var(--border-subtle);
+  padding: 2.5rem 0;
+  margin-top: 5rem;
+  color: var(--text-muted);
+  font-size: 0.875rem;
 }
+
+
+
+

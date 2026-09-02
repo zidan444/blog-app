@@ -1,49 +1,153 @@
 <%- include('partials/header') %>
 
-<div class="container mt-5">
-  <h1 class="mb-4 text-center">All Blogs</h1>
+<!-- Apple-Style Minimal Hero -->
+<div class="hero-wrapper">
+  <div class="container">
+    <div class="hero-badge-apple">
+      <i class="bi bi-sparkles"></i> Curated Thoughts & Ideas
+    </div>
+    
+    <h1 class="hero-title">Think Different.<br>Write Beautifully.</h1>
+    <p class="hero-subtitle">A quiet, refined space for exploring technology, design, and software engineering.</p>
 
-  <% if(blogs.length === 0){ %>
-    <p class="text-center">No blogs yet. <a href="/new">Create one now!</a></p>
-  <% } %>
-
-  <div class="row">
-    <% blogs.forEach(blog => { %>
-      <div class="col-md-6 mb-4">
-        <div class="card shadow-sm h-100">
-         <% if(blog.image){ %>
-  <img src="<%= blog.image %>" class="card-img-top" alt="Blog image" style="height:250px; object-fit:cover;">
-<% } %>
-
-          <div class="card-body d-flex flex-column">
-            <h5 class="card-title">
-              <a href="/<%= blog._id %>" class="text-decoration-none text-light">
-                <%= blog.title %>
-              </a>
-            </h5>
-
-            <p class="card-text"><%= blog.content.substring(0, 120) %>...</p>
-
-            <small class="text-white d-block mb-2">
-              By <%= blog.author ? blog.author.username : "Unknown" %>
-              on <%= blog.createdAt.toDateString() %>
-            </small>
-
-            <a href="/<%= blog._id %>" class="btn btn-outline-light mt-2 align-self-start">Read More</a>
-
-            <% if (userId && blog.author && blog.author._id.toString() === userId.toString()) { %>
-              <div class="mt-2 d-flex gap-2">
-                <a href="/<%= blog._id %>/edit" class="btn btn-sm btn-warning">Edit</a>
-                <form action="/<%= blog._id %>?_method=DELETE" method="POST" class="d-inline">
-                  <button type="submit" class="btn btn-sm btn-danger">Delete</button>
-                </form>
-              </div>
-            <% } %>
-          </div>
-        </div>
+    <!-- Search Bar -->
+    <form action="/" method="GET" class="search-container">
+      <div class="position-relative">
+        <i class="bi bi-search search-icon"></i>
+        <input 
+          type="text" 
+          name="search" 
+          class="form-control search-input" 
+          placeholder="Search stories, topics, or keywords..."
+          value="<%= typeof search !== 'undefined' ? search : '' %>"
+        >
+        <% if (typeof activeCategory !== 'undefined' && activeCategory) { %>
+          <input type="hidden" name="category" value="<%= activeCategory %>">
+        <% } %>
       </div>
-    <% }) %>
+    </form>
+
+    <!-- Category Pills -->
+    <div class="filter-pills-container">
+      <a href="/" class="filter-pill <%= (!activeCategory) ? 'active' : '' %>">
+        All Topics
+      </a>
+      <% if (typeof allCategories !== 'undefined' && allCategories.length > 0) { %>
+        <% allCategories.forEach(cat => { %>
+          <a 
+            href="/?category=<%= encodeURIComponent(cat) %><%= search ? '&search=' + encodeURIComponent(search) : '' %>" 
+            class="filter-pill <%= (activeCategory === cat) ? 'active' : '' %>"
+          >
+            <%= cat %>
+          </a>
+        <% }) %>
+      <% } %>
+    </div>
   </div>
 </div>
 
+<div class="container my-4">
+  <% if (search || activeCategory) { %>
+    <div class="d-flex align-items-center justify-content-between mb-4 pb-2 border-bottom border-secondary">
+      <p class="text-secondary mb-0" style="font-size: 0.95rem;">
+        Showing results 
+        <% if (search) { %> for "<strong class="text-white"><%= search %></strong>"<% } %>
+        <% if (activeCategory) { %> in topic "<strong class="text-white"><%= activeCategory %></strong>"<% } %>
+      </p>
+      <a href="/" class="btn btn-sm btn-outline-custom">
+        Clear Filter
+      </a>
+    </div>
+  <% } %>
+
+  <% if (blogs.length === 0) { %>
+    <div class="glass-card text-center py-5 my-4">
+      <h3 class="fw-bold mb-2">No Stories Found</h3>
+      <p class="text-secondary mb-3">No blog posts match your current search query.</p>
+      <% if (userId) { %>
+        <a href="/new" class="btn btn-minimal">
+          <i class="bi bi-plus-lg me-1"></i> Write a Story
+        </a>
+      <% } else { %>
+        <a href="/" class="btn btn-outline-custom">Browse All Stories</a>
+      <% } %>
+    </div>
+  <% } else { %>
+
+    <!-- Cards Grid -->
+    <div class="row g-4">
+      <% blogs.forEach(blog => { %>
+        <% 
+          const wordCount = blog.content ? blog.content.trim().split(/\s+/).length : 0;
+          const readTime = Math.max(1, Math.ceil(wordCount / 200));
+          const authorName = blog.author ? blog.author.username : "Unknown";
+          const authorInitial = authorName[0].toUpperCase();
+          const likesCount = (blog.likes && blog.likes.length) ? blog.likes.length : 0;
+          const commentsCount = (blog.comments && blog.comments.length) ? blog.comments.length : 0;
+        %>
+        <div class="col-md-6 col-lg-4">
+          <article class="story-card position-relative">
+            <!-- Full Card Click Link -->
+            <a href="/<%= blog._id %>" class="story-card-click-area" aria-label="<%= blog.title %>">
+              <% if (blog.image) { %>
+                <div class="story-card-img-wrapper">
+                  <img src="<%= blog.image %>" class="story-card-img" alt="<%= blog.title %>">
+                  <% if (blog.categories && blog.categories.length > 0) { %>
+                    <span class="story-category-tag"><%= blog.categories[0] %></span>
+                  <% } %>
+                </div>
+              <% } %>
+
+              <div class="story-card-body">
+                <h3 class="story-card-title">
+                  <%= blog.title %>
+                </h3>
+
+                <p class="story-card-excerpt">
+                  <%= blog.content.substring(0, 110) %><%= blog.content.length > 110 ? '...' : '' %>
+                </p>
+
+                <div class="author-pill-group">
+                  <div class="avatar-badge"><%= authorInitial %></div>
+                  <div class="author-info">
+                    <span class="author-name-text"><%= authorName %></span>
+                    <span class="author-date-text">
+                      <%= blog.createdAt ? new Date(blog.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '' %> 
+                      • <%= readTime %>m read
+                    </span>
+                  </div>
+
+                  <div class="post-stats-group">
+                    <span><i class="bi bi-heart me-1"></i><%= likesCount %></span>
+                    <span><i class="bi bi-chat me-1"></i><%= commentsCount %></span>
+                  </div>
+                </div>
+              </div>
+            </a>
+
+            <!-- Owner Action Buttons (Positioned Z-Index High) -->
+            <% if (userId && blog.author && blog.author._id.toString() === userId.toString()) { %>
+              <div class="card-owner-actions px-4 pb-3 pt-1 d-flex gap-2">
+                <a href="/<%= blog._id %>/edit" class="btn btn-sm btn-outline-custom w-50 z-2">
+                  Edit
+                </a>
+                <form action="/<%= blog._id %>?_method=DELETE" method="POST" class="w-50 z-2">
+                  <button type="submit" class="btn btn-sm btn-outline-danger w-100" onclick="return confirm('Delete this post?');">
+                    Delete
+                  </button>
+                </form>
+              </div>
+            <% } %>
+          </article>
+        </div>
+      <% }) %>
+    </div>
+  <% } %>
+</div>
+
 <%- include('partials/footer') %>
+
+
+
+
+

@@ -1,91 +1,214 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title><%= blog.title %></title>
-  <link rel="stylesheet" href="/style.css">
-</head>
-<body>
 <%- include('partials/header') %>
 
-<div class="container mt-5">
-  <h1 class="mb-3"><%= blog.title %></h1>
+<% 
+  const wordCount = blog.content ? blog.content.trim().split(/\s+/).length : 0;
+  const readTime = Math.max(1, Math.ceil(wordCount / 200));
+  const authorName = blog.author ? blog.author.username : "Unknown";
+  const authorInitial = authorName[0].toUpperCase();
+  const likesCount = (blog.likes && blog.likes.length) ? blog.likes.length : 0;
+  const isLiked = userId && blog.likes && blog.likes.some(id => id.toString() === userId.toString());
+  const commentsCount = (blog.comments && blog.comments.length) ? blog.comments.length : 0;
+%>
 
-  <small class="text-white d-block mb-2">
-    By <%= blog.author ? blog.author.username : "Unknown" %>
-    on <%= blog.createdAt ? blog.createdAt.toDateString() : "Unknown date" %>
-  </small>
+<div class="container my-5" style="max-width: 880px;">
+  <!-- Navigation Header -->
+  <div class="d-flex align-items-center justify-content-between mb-5">
+    <a href="/" class="btn btn-outline-custom">
+      <i class="bi bi-arrow-left me-1"></i> Back to All Stories
+    </a>
+    
+    <div class="d-flex gap-2">
+      <button 
+        class="btn btn-outline-custom"
+        onclick="navigator.clipboard.writeText('<%= shareUrl %>').then(() => {
+          const toast = document.getElementById('shareToast');
+          toast.classList.add('show');
+          setTimeout(() => toast.classList.remove('show'), 3000);
+        });"
+      >
+        <i class="bi bi-share me-1"></i> Share
+      </button>
+    </div>
+  </div>
 
-  <% if (blog.categories && blog.categories.length) { %>
-    <p class="text-info mt-2">Categories: <%= blog.categories.join(", ") %></p>
-  <% } %>
+  <!-- Article Header -->
+  <header class="single-article-header">
+    <% if (blog.categories && blog.categories.length > 0) { %>
+      <div class="d-flex justify-content-center gap-2 mb-3">
+        <% blog.categories.forEach(cat => { %>
+          <span class="badge-category"><%= cat %></span>
+        <% }) %>
+      </div>
+    <% } %>
 
+    <h1 class="single-article-title"><%= blog.title %></h1>
+
+    <div class="d-flex align-items-center justify-content-center gap-3 flex-wrap">
+      <div class="d-flex align-items-center gap-2">
+        <div class="avatar-badge" style="width: 42px; height: 42px; font-size: 1.05rem;">
+          <%= authorInitial %>
+        </div>
+        <div class="text-start">
+          <div class="fw-bold text-white"><%= authorName %></div>
+          <div class="text-muted" style="font-size: 0.8rem;">Author</div>
+        </div>
+      </div>
+      <div class="text-muted">•</div>
+      <div class="text-secondary" style="font-size: 0.9rem;">
+        <i class="bi bi-calendar3 me-1"></i>
+        <%= blog.createdAt ? new Date(blog.createdAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '' %>
+      </div>
+      <div class="text-muted">•</div>
+      <div class="text-secondary" style="font-size: 0.9rem;">
+        <i class="bi bi-clock me-1"></i>
+        <%= readTime %> min read
+      </div>
+    </div>
+  </header>
+
+  <!-- Featured Cover Image -->
   <% if (blog.image) { %>
-    <img src="<%= blog.image %>" class="img-fluid rounded my-3" alt="Blog cover">
+    <div class="mb-5">
+      <img src="<%= blog.image %>" class="w-100 rounded-4 shadow-lg border border-secondary" style="max-height: 480px; object-fit: cover;" alt="<%= blog.title %>">
+    </div>
   <% } %>
 
-  <p class="fs-5"><%= blog.content %></p>
+  <!-- Article Story Body -->
+  <article class="single-article-body">
+    <%= blog.content %>
+  </article>
 
-  <!-- Like / Share -->
-  <div class="mt-4">
-    <% const likesCount = (blog.likes && blog.likes.length) ? blog.likes.length : 0; %>
+  <!-- Action Bar (Likes & Owner Actions) -->
+  <div class="glass-card mb-5 d-flex align-items-center justify-content-between flex-wrap gap-3">
+    <div class="d-flex align-items-center gap-3">
+      <% if (userId) { %>
+        <form action="/<%= blog._id %>/like" method="POST" class="d-inline">
+          <button type="submit" class="btn <%= isLiked ? 'btn-danger' : 'btn-outline-danger' %> px-4 d-flex align-items-center gap-2">
+            <i class="bi <%= isLiked ? 'bi-heart-fill' : 'bi-heart' %>"></i> 
+            <span><%= isLiked ? 'Liked' : 'Like' %></span>
+            <span class="badge bg-white text-dark ms-1"><%= likesCount %></span>
+          </button>
+        </form>
+      <% } else { %>
+        <a href="/login" class="btn btn-outline-danger d-flex align-items-center gap-2">
+          <i class="bi bi-heart"></i> Like (<%= likesCount %>)
+        </a>
+      <% } %>
+
+      <button 
+        class="btn btn-outline-custom d-flex align-items-center gap-2"
+        onclick="navigator.clipboard.writeText('<%= shareUrl %>').then(() => {
+          const toast = document.getElementById('shareToast');
+          toast.classList.add('show');
+          setTimeout(() => toast.classList.remove('show'), 3000);
+        });"
+      >
+        <i class="bi bi-share-fill me-1"></i> Copy Link
+      </button>
+    </div>
+
+    <!-- Owner Actions -->
+    <% if (userId && blog.author && blog.author._id.toString() === userId.toString()) { %>
+      <div class="d-flex gap-2">
+        <a href="/<%= blog._id %>/edit" class="btn btn-outline-warning">
+          <i class="bi bi-pencil-square me-1"></i> Edit Story
+        </a>
+        <form action="/<%= blog._id %>?_method=DELETE" method="POST" class="d-inline">
+          <button type="submit" class="btn btn-outline-danger" onclick="return confirm('Are you sure you want to delete this story?');">
+            <i class="bi bi-trash me-1"></i> Delete
+          </button>
+        </form>
+      </div>
+    <% } %>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="shareToast" class="toast align-items-center text-bg-success border-0 position-fixed bottom-0 end-0 m-4" role="alert" aria-live="assertive" aria-atomic="true">
+    <div class="d-flex">
+      <div class="toast-body">
+        <i class="bi bi-check-circle-fill me-2"></i> Story link copied to clipboard!
+      </div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+    </div>
+  </div>
+
+  <!-- Comments Box -->
+  <section class="comments-box">
+    <div class="d-flex align-items-center justify-content-between mb-4">
+      <h3 class="fw-bold mb-0">
+        <i class="bi bi-chat-left-text-fill me-2 text-primary"></i> Comments (<%= commentsCount %>)
+      </h3>
+    </div>
+
+    <!-- Post Comment Form -->
     <% if (userId) { %>
-      <form action="/<%= blog._id %>/like" method="POST" class="d-inline">
-        <button type="submit" class="btn btn-outline-primary">
-          ❤️ Like (<%= likesCount %>)
+      <form action="/<%= blog._id %>/comment" method="POST" class="mb-4">
+        <div class="mb-3">
+          <textarea 
+            name="text" 
+            class="form-control" 
+            rows="3" 
+            placeholder="Share your thoughts on this story..." 
+            required
+          ></textarea>
+        </div>
+        <button type="submit" class="btn btn-gradient">
+          <i class="bi bi-send-fill me-1"></i> Post Comment
         </button>
       </form>
     <% } else { %>
-      <p><a href="/login">Login</a> to like this blog</p>
+      <div class="alert alert-dark border-secondary text-center py-3 mb-4">
+        <span class="text-secondary">Want to leave a comment?</span>
+        <a href="/login" class="fw-bold ms-1 text-primary">Log in to your account</a>
+      </div>
     <% } %>
 
-    <button 
-      class="btn btn-outline-info"
-      onclick="navigator.clipboard.writeText('<%= shareUrl %>').then(()=>alert('Link copied!'));">
-      🔗 Share
-    </button>
-  </div>
-
-  <!-- Edit/Delete if owner -->
-  <div class="mt-3">
-    <a href="/" class="btn btn-outline-light">← Back to Blogs</a>
-    <% if (userId && blog.author && blog.author._id.toString() === userId.toString()) { %>
-      <a href="/<%= blog._id %>/edit" class="btn btn-warning">Edit</a>
-      <form action="/<%= blog._id %>?_method=DELETE" method="POST" class="d-inline">
-        <button type="submit" class="btn btn-danger">Delete</button>
-      </form>
-    <% } %>
-  </div>
-
-  <!-- Comments Section -->
-  <div class="mt-5">
-    <% const commentsCount = (blog.comments && blog.comments.length) ? blog.comments.length : 0; %>
-    <h3>Comments (<%= commentsCount %>)</h3>
-
-    <% if (userId) { %>
-      <form action="/<%= blog._id %>/comment" method="POST" class="mb-3">
-        <textarea name="text" class="form-control mb-2" rows="3" placeholder="Write a comment..." required></textarea>
-        <button type="submit" class="btn btn-success">Post Comment</button>
-      </form>
-    <% } else { %>
-      <p><a href="/login">Login</a> to comment</p>
-    <% } %>
-
+    <!-- Comments List -->
     <% if (commentsCount > 0) { %>
-      <ul class="list-group">
+      <div class="d-flex flex-column gap-3">
         <% blog.comments.forEach(comment => { %>
-          <li class="list-group-item bg-dark text-white">
-            <strong><%= comment.user ? comment.user.username : "Anonymous" %></strong>
-            <small class="text-muted"> (<%= comment.createdAt ? new Date(comment.createdAt).toDateString() : "" %>)</small>
-            <p><%= comment.text %></p>
-          </li>
+          <% 
+            const cUser = comment.user ? comment.user.username : "Anonymous";
+            const cInitial = cUser[0].toUpperCase();
+            const isCommentAuthor = userId && comment.user && comment.user._id && comment.user._id.toString() === userId.toString();
+            const isBlogOwner = userId && blog.author && blog.author._id.toString() === userId.toString();
+          %>
+          <div class="comment-card-item">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+              <div class="d-flex align-items-center gap-2">
+                <div class="avatar-badge" style="width: 32px; height: 32px; font-size: 0.8rem;">
+                  <%= cInitial %>
+                </div>
+                <div>
+                  <span class="fw-bold text-white me-2"><%= cUser %></span>
+                  <small class="text-muted">
+                    <%= comment.createdAt ? new Date(comment.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '' %>
+                  </small>
+                </div>
+              </div>
+
+              <!-- Delete comment button -->
+              <% if (isCommentAuthor || isBlogOwner) { %>
+                <form action="/<%= blog._id %>/comment/<%= comment._id %>?_method=DELETE" method="POST" class="d-inline">
+                  <button type="submit" class="btn btn-sm btn-link text-danger p-0" title="Delete comment" onclick="return confirm('Delete this comment?');">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </form>
+              <% } %>
+            </div>
+
+            <p class="mb-0 text-light ms-4 ps-2 border-start border-secondary" style="font-size: 0.95rem; line-height: 1.6;">
+              <%= comment.text %>
+            </p>
+          </div>
         <% }) %>
-      </ul>
+      </div>
     <% } else { %>
-      <p>No comments yet.</p>
+      <p class="text-secondary text-center py-4 mb-0">No comments yet. Be the first to start the conversation!</p>
     <% } %>
-  </div>
+  </section>
 </div>
 
 <%- include('partials/footer') %>
-</body>
-</html>
+
+

@@ -1,47 +1,47 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Create New Blog</title>
-  <link rel="stylesheet" href="/style.css">
-</head>
-<body>
-  <%- include('partials/header') %>
+<%- include('partials/header') %>
 
-<div class="container mt-5">
-  <h1 class="mb-4 text-center">Create a New Blog Post</h1>
-
-  <form id="blogForm" class="p-4 rounded shadow" style="background:#1e1e1e;">
-    <!-- Title -->
-    <div class="mb-3">
-      <label for="title" class="form-label">Title</label>
-      <input type="text" name="title" id="title" class="form-control" placeholder="Enter blog title" required>
+<div class="container my-5" style="max-width: 720px;">
+  <div class="glass-card">
+    <div class="mb-4">
+      <h2 class="fw-bold mb-1" style="font-family: 'Newsreader', serif; font-size: 2rem;">Write New Story</h2>
+      <p class="text-secondary" style="font-size: 0.9rem;">Share your thoughts and ideas with readers.</p>
     </div>
 
-    <!-- Content -->
-    <div class="mb-3">
-      <label for="content" class="form-label">Content</label>
-      <textarea name="content" id="content" rows="8" class="form-control" placeholder="Write your blog here..." required></textarea>
-    </div>
+    <form id="blogForm">
+      <!-- Title -->
+      <div class="mb-4">
+        <label for="title" class="form-label">Title</label>
+        <input type="text" name="title" id="title" class="form-control" placeholder="Enter story title..." required>
+      </div>
 
-    <!-- Categories -->
-    <div class="mb-3">
-      <label for="categories" class="form-label">Categories</label>
-      <input type="text" name="categories" id="categories" class="form-control" placeholder="Comma separated, e.g. Tech,Lifestyle">
-    </div>
+      <!-- Categories -->
+      <div class="mb-4">
+        <label for="categories" class="form-label">Topics / Categories</label>
+        <input type="text" name="categories" id="categories" class="form-control" placeholder="Comma separated, e.g. Tech, Design, Tutorial">
+      </div>
 
-    <!-- Image Upload -->
-    <div class="mb-3">
-      <label for="image" class="form-label">Upload Image</label>
-      <input type="file" id="image" class="form-control" accept="image/*">
-    </div>
+      <!-- Image Upload -->
+      <div class="mb-4">
+        <label for="image" class="form-label">Cover Image (Optional)</label>
+        <input type="file" id="image" class="form-control" accept="image/*">
+        <input type="hidden" name="image" id="imageUrl">
+        <div id="preview" class="mt-3"></div>
+      </div>
 
-    <!-- Hidden input to store image URL (Cloudinary or local) -->
-    <input type="hidden" name="image" id="imageUrl">
+      <!-- Content -->
+      <div class="mb-4">
+        <label for="content" class="form-label">Content Body</label>
+        <textarea name="content" id="content" rows="10" class="form-control" placeholder="Write your full story here..." required></textarea>
+      </div>
 
-    <div id="preview" class="mb-3"></div>
-
-    <button type="submit" class="btn btn-success w-100">Publish</button>
-  </form>
+      <div class="d-flex align-items-center justify-content-between pt-3 border-top border-secondary">
+        <a href="/" class="btn btn-outline-custom">Cancel</a>
+        <button type="submit" id="submitBtn" class="btn btn-minimal">
+          Publish Post
+        </button>
+      </div>
+    </form>
+  </div>
 </div>
 
 <%- include('partials/footer') %>
@@ -51,52 +51,68 @@ const blogForm = document.getElementById('blogForm');
 const imageInput = document.getElementById('image');
 const previewDiv = document.getElementById('preview');
 const imageUrlInput = document.getElementById('imageUrl');
+const submitBtn = document.getElementById('submitBtn');
+
+imageInput.addEventListener('change', () => {
+  if (imageInput.files.length) {
+    const file = imageInput.files[0];
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      previewDiv.innerHTML = `
+        <div class="position-relative d-inline-block">
+          <img src="${e.target.result}" style="max-height:180px; border-radius:8px; object-fit:cover;" class="border border-secondary">
+        </div>
+      `;
+    };
+    reader.readAsDataURL(file);
+  }
+});
 
 blogForm.addEventListener('submit', async (e) => {
   e.preventDefault();
+  submitBtn.disabled = true;
+  submitBtn.innerHTML = 'Publishing...';
 
-  if (imageInput.files.length) {
-    const formData = new FormData();
-    formData.append('image', imageInput.files[0]);
+  try {
+    if (imageInput.files.length) {
+      const formData = new FormData();
+      formData.append('image', imageInput.files[0]);
 
-    // Upload image to Cloudinary
-    const res = await fetch('/api/upload', { method: 'POST', body: formData });
-    const data = await res.json();
+      const res = await fetch('/api/upload', { method: 'POST', body: formData });
+      const data = await res.json();
 
-    if (res.ok) {
-      // Set the Cloudinary URL in the hidden input
-      imageUrlInput.value = data.url;
-
-      // Optional: show preview
-      previewDiv.innerHTML = `<img src="${data.url}" style="height:200px; object-fit:cover;">`;
-    } else {
-      console.error(data);
-      return alert('Image upload failed');
+      if (res.ok) {
+        imageUrlInput.value = data.url;
+      }
     }
-  }
 
-  // Now submit the blog data to your backend
-  const payload = {
-    title: document.getElementById('title').value,
-    content: document.getElementById('content').value,
-    categories: document.getElementById('categories').value,
-    image: imageUrlInput.value
-  };
+    const payload = {
+      title: document.getElementById('title').value,
+      content: document.getElementById('content').value,
+      categories: document.getElementById('categories').value,
+      image: imageUrlInput.value
+    };
 
-const postRes = await fetch('/', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify(payload)
-});
+    const postRes = await fetch('/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
 
-
-  if (postRes.ok) {
-    alert('Blog published successfully!');
-    window.location.href = '/'; // redirect to blog list
-  } else {
-    alert('Blog creation failed');
+    if (postRes.ok) {
+      window.location.href = '/';
+    } else {
+      alert('Failed to publish story.');
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = 'Publish Post';
+    }
+  } catch (err) {
+    console.error(err);
+    alert('An error occurred.');
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = 'Publish Post';
   }
 });
 </script>
-</body>
-</html>
+
+
